@@ -9,9 +9,10 @@ class Pokemon:
         self.stats = stats
 
     def summarize(self):
-        summary_list = [self.species, self.health]
+        summaryList = [self.species, self.health]
         for move in moves:
-            summary_list += move.value
-        summary_list += [item, ability]
+            summaryList += move.value
+        summaryList += [item, ability]
         for stat in stats:
-            summary_list += stat
+            summaryList += stat
+        return np.array(summaryList)

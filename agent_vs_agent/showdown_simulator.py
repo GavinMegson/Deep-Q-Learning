@@ -15,10 +15,10 @@ class ShowdownSimulator():
         self.process.send('>start {"formatid":"gen8ou"}\n')
         self.process.expect('update')
 
-        self.process.send('>player p1 {"name":"%s", "team":"%s"}\n' % (p1.getName(), p1.getTeam()))
+        self.process.send('>player p1 {"name":"%s", "team":"%s"}\n' % (p1.getName(), p1.getPackedTeam()))
         self.process.expect('update')
 
-        self.process.sendline('>player p2 {"name":"%s", "team":"%s"}' % (p2.getName(), p2.getTeam()))
+        self.process.sendline('>player p2 {"name":"%s", "team":"%s"}' % (p2.getName(), p2.getPackedTeam()))
         self.process.expect('update')
 
         self.process.sendline('>p1 team {0}'.format(p1.getOrder()))
