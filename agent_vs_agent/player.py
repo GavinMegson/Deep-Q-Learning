@@ -4,11 +4,13 @@ from items import Items
 from ability_lookup import AbilityLookup
 from abilities import Abilities
 from pokemon import Pokemon
+from random import randint
+
 class Player():
     def __init__(self, name, team, order="12345"):
         self.name = name
         self.packedTeam = team
-        self.team = self.processTeam(team)
+        self.processTeam(team)
         self.order = order
 
     def getName(self):
@@ -23,8 +25,11 @@ class Player():
     def getOrder(self):
         return self.order
 
-    def getMove(self):
-        return 
+    def getMove(self, match):
+        return randint(1,10)
+
+    def setActivePokemon(self, index):
+        self.activePokemon = index
 
     def processTeam(self, team):
         self.team = list()
@@ -52,7 +57,7 @@ class Player():
                 if stat == '':
                     stat = 0
                 statList.append(int(stat))
-            self.team.append(Pokemon(species, moveList, item, ability, statList))
+            self.team.append(Pokemon(species.value, moveList, item.value, ability.value, statList))
 
 
 

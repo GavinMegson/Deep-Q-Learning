@@ -4,14 +4,19 @@ import pexpect
 from player import Player
 from time import sleep
 from species import Species
+from match import Match
 import sys
 
 class ShowdownSimulator():
     def __init__(self):
         self.process = pexpect.spawn('/home/wlayton/pokemon-showdown/pokemon-showdown simulate-battle',encoding='utf-8')
         self.process.logfile_read = sys.stdout
+
+    def summary(self, player):
+        return self.match.summarize(player)
         
     def setup(self, p1, p2):
+        self.match = Match(p1, p2)
         self.process.send('>start {"formatid":"gen8ou"}\n')
         self.process.expect('update')
 
@@ -22,9 +27,11 @@ class ShowdownSimulator():
         self.process.expect('update')
 
         self.process.sendline('>p1 team {0}'.format(p1.getOrder()))
+        p1.setActivePokemon(int(p1.getOrder()[1]))
         self.process.expect('update')
 
         self.process.sendline('>p2 team {0}'.format(p2.getOrder()))
+        p2.setActivePokemon(int(p2.getOrder()[1]))
         self.process.expect('update')
         
     def update(self, p1Action, p2Action):
@@ -47,9 +54,6 @@ p2 = Player("Bob", team1, "123456")
 test = ShowdownSimulator()
 test.setup(p1, p2)
 for i in range(10):
-    p1_move = randint(1, 10)
-    p2_move = randint(1, 10)
+    p1_move = p1.getMove(test.summary(p1)) 
+    p2_move = p2.getMove(test.summary(p2)) 
     test.update(p1_move, p2_move)
-
-print(Species["Abra"])
-print(Species(5))
