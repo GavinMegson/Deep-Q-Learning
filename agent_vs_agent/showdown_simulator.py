@@ -3,6 +3,7 @@ from random import randint
 import pexpect
 from player import Player
 from time import sleep
+from species import Species
 import sys
 
 class ShowdownSimulator():
@@ -49,3 +50,6 @@ for i in range(10):
     p1_move = randint(1, 10)
     p2_move = randint(1, 10)
     test.update(p1_move, p2_move)
+
+print(Species["Abra"])
+print(Species(5))
