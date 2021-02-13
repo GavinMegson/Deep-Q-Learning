@@ -4,6 +4,7 @@ class Pokemon:
         self.species = species
         self.hp = 100
         self.moves = moves
+        self.moveStatus = len(moves)*[True]
         self.item = item
         self.ability = ability
         self.stats = stats
@@ -13,6 +14,12 @@ class Pokemon:
 
     def setHp(self, hp):
         self.hp = hp
+
+    def setMoveStatus(self, index, status):
+        self.moveStatus[index] = status
+
+    def validMove(self, index):
+        return self.moveStatus[index]
 
     def summarize(self):
         summaryList = [self.species, self.hp]

@@ -1,6 +1,5 @@
 from enum import IntEnum, auto
 class Actions(IntEnum):
-    Switch1 = 1 
     Switch2 = 2 
     Switch3 = 3
     Switch4 = 4 

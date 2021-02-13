@@ -13,7 +13,7 @@ class Player():
         self.packedTeam = team
         self.processTeam(team)
         self.order = order
-        self.activePokemon = int(order[0])
+        self.setActivePokemon(int(order[0]))
 
     def getName(self):
         return self.name
@@ -30,18 +30,34 @@ class Player():
     def getMove(self, match):
         potentialActions = list()
         for action in Actions:
-            if action > Actions.Switch6 or (action.value != self.activePokemon and self.getPokemonHp(action.value) != 0):
+            if (action > Actions.Switch6 and self.validMove(action-Actions.Switch6-1)) or (action < Actions.Move1 and self.getPokemonHp(action.value) != 0):
                 potentialActions.append(action)
         return choice(potentialActions)
 
+    def setMoveStatus(self, action, status):
+        self.team[0].setMoveStatus(action, status)
+
+    def validMove(self, action):
+        return self.team[0].validMove(action)
+
+    def forceSwitch(self, match):
+        potentialActions = list()
+        for action in Actions:
+            if action < Actions.Move1 and self.getPokemonHp(action.value) != 0:
+                potentialActions.append(action)
+        return choice(potentialActions)
+
+
     def setActivePokemon(self, index):
-        self.activePokemon = index
+        temp = self.team[0]
+        self.team[0] = self.team[index-1]
+        self.team[index-1] = temp
 
     def getPokemonHp(self, index):
         return self.team[index-1].getHp()
 
     def updatePokemonHealth(self, hp):
-        self.team[self.activePokemon-1].setHp(hp)
+        self.team[0].setHp(hp)
 
     def processTeam(self, team):
         self.team = list()
