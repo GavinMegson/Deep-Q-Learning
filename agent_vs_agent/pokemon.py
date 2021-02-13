@@ -8,6 +8,12 @@ class Pokemon:
         self.ability = ability
         self.stats = stats
 
+    def getHp(self):
+        return self.hp
+
+    def setHp(self, hp):
+        self.hp = hp
+
     def summarize(self):
         summaryList = [self.species, self.hp]
         for move in self.moves:
@@ -15,5 +21,4 @@ class Pokemon:
         summaryList += [self.item, self.ability]
         for stat in self.stats:
             summaryList.append(stat)
-        print(np.array(summaryList))
         return np.array(summaryList)
