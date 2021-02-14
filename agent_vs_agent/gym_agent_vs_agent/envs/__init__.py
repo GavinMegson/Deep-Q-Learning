@@ -1,0 +1,1 @@
+from gym_agent_vs_agent.envs.agent_vs_agent import AgentVsAgentEnv
