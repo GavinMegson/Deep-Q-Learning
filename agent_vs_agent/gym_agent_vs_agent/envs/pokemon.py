@@ -14,5 +14,9 @@ class Pokemon():
         summaryVector = np.array([self.species.value, self.hp])
         for move in self.moves:
             summaryVector = np.concatenate([summaryVector, np.array([move.value])], axis=None)
-        summaryVector = np.concatenate([summaryVector, np.array([self.item.value, self.ability.value])], axis=None)
+        if self.item == -1:
+            itemValue = -1
+        else:
+            itemValue = self.item.value
+        summaryVector = np.concatenate([summaryVector, np.array([itemValue, self.ability.value])], axis=None)
         return summaryVector

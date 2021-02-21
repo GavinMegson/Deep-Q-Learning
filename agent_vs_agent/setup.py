@@ -1,7 +1,6 @@
 from setuptools import setup
 
-setup(name='gym_agent_vs_agent',
+setup(name='gym_agentVsAgent',
       version='0.0.1',
-      install_requires=['gym',
-                        ]
+      install_requires=['gym']  # And any other dependencies foo needs
 )
