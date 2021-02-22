@@ -14,10 +14,15 @@ class Player():
             if (action-1) in self.activeMoves:
                 return action
             else:
-                return self.activeMoves[0]
+                return (self.activeMoves[0]+1)
         else:
             if self.team[action-4].hp == 0:
-                return self.nextActivePokemon()
+                nextPokemon = self.nextActivePokemon()
+                print("inside valid move" + str(nextPokemon))
+                if nextPokemon == -1:
+                    return (self.activeMoves[0]+1)
+                else:
+                    return (nextPokemon+3)
             else:
                 return action
 
@@ -59,6 +64,7 @@ class Player():
         for i in range(1, len(self.team)):
             if self.team[i].hp > 0:
                 return (i+1)
+        return -1
 
     def getTeam(self):
         return self.team

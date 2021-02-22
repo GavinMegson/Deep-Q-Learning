@@ -68,19 +68,28 @@ class ShowdownSimulator():
         self.process.send(p2Action)
 
 
-        self.process.expect("sideupdate\r\np1\r\n(.+?}\r\n)\r\nsideupdate\r\np2\r\n(.+?}\r\n)")
+        self.process.expect("sideupdate\r\np1\r\n(.+?}\r\n)\r\nsideupdate\r\np2\r\n(.+?}\r\n)|(end)")
+        #print("group 3 match: " + str(self.process.match.group(3)))
+        #print("after print")
+        if self.process.match.group(3) is not None:
+            self.matchOver = True
+            return
 
         self.primaryAgent.update(self.process.match.group(1))
         self.opposingAgent.update(self.process.match.group(2))
 
-        if self.primaryAgent.forceSwitch:
-            nextPokemon = self.primaryAgent.nextActivePokemon()
-            self.process.send(">p1 switch " + str(nextPokemon) + "\n") 
+        while self.primaryAgent.forceSwitch or self.opposingAgent.forceSwitch:
+            if self.primaryAgent.forceSwitch:
+                nextPokemon = self.primaryAgent.nextActivePokemon()
+                self.process.send(">p1 switch " + str(nextPokemon) + "\n") 
+            if self.opposingAgent.forceSwitch:
+                nextPokemon = self.opposingAgent.nextActivePokemon()
+                self.process.send(">p2 switch " + str(nextPokemon) + "\n")
             self.process.expect("sideupdate\r\np1\r\n(.+?}\r\n)\r\nsideupdate\r\np2\r\n(.+?}\r\n)")
-        if self.opposingAgent.forceSwitch:
-            nextPokemon = self.opposingAgent.nextActivePokemon()
-            self.process.send(">p2 switch " + str(nextPokemon) + "\n")
-            self.process.expect("sideupdate\r\np1\r\n(.+?}\r\n)\r\nsideupdate\r\np2\r\n(.+?}\r\n)")
+            self.primaryAgent.forceSwitch = False
+            self.opposingAgent.forceSwitch = False
+            self.primaryAgent.update(self.process.match.group(1))
+            self.opposingAgent.update(self.process.match.group(2))
 
     def summarize(self, player):
         if player == "primary":

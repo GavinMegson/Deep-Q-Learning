@@ -2,6 +2,7 @@ import gym
 import numpy as np
 from tensorflow import keras
 from tensorflow.keras import layers
+import tensorflow as tf
 
 
 env = gym.make('gym_agent_vs_agent:AgentVsAgent-v0', primaryAgent="test", opposingAgent="random")
