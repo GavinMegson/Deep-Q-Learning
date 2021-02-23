@@ -83,7 +83,7 @@ class ShowdownSimulator():
             if self.opposingAgent.forceSwitch:
                 nextPokemon = self.opposingAgent.nextActivePokemon()
                 self.process.send(">p2 switch " + str(nextPokemon) + "\n")
-            self.process.expect("sideupdate\r\np1\r\n(.+?}\r\n)\r\nsideupdate\r\np2\r\n(.+?}\r\n)")
+            self.process.expect("sideupdate\r\np1\r\n(.+?}\r\n)\r\nsideupdate\r\np2\r\n(.+?}\r\n)|(winner)")
             self.primaryAgent.forceSwitch = False
             self.opposingAgent.forceSwitch = False
             self.primaryAgent.update(self.process.match.group(1))
