@@ -26,15 +26,18 @@ epsilon_interval = (
 batch_size = 32  # Size of batch taken from replay buffer
 max_steps_per_episode = 10000
 
+# Number of actions needed to be adapted since the Showdown Simulator has more
+# moves than an Atari game
 num_actions = 9
 
 
 def create_q_model():
     # Network defined by the Deepmind paper
+    # Old and new shapes
     #inputs = layers.Input(shape=(84, 84, 4,))
     inputs = layers.Input(shape=(32, 54, 1,))
 
-    # Convolutions on the frames on the screen
+    # Convolutions on the states of the Pokemon game
     layer1 = layers.Conv2D(32, 8, strides=4, activation="relu")(inputs)
     layer2 = layers.Conv2D(64, 4, strides=2, activation="relu")(layer1)
     layer3 = layers.Conv2D(64, 1, strides=1, activation="relu")(layer2)
@@ -67,11 +70,11 @@ done_history = []
 episode_reward_history = []
 running_reward = 0
 episode_count = 0
-frame_count = 0
-# Number of frames to take random action and observe output
-epsilon_random_frames = 50000
-# Number of frames for exploration
-epsilon_greedy_frames = 1000000.0
+game_count = 0
+# Number of game states to take random action and observe output
+epsilon_random_games = 50000
+# Number of game states for exploration
+epsilon_greedy_games = 1000000.0
 # Maximum replay length
 # Note: The Deepmind paper suggests 1000000 however this causes memory issues
 max_memory_length = 100000
@@ -89,10 +92,10 @@ while True:  # Run until solved
     for timestep in range(1, max_steps_per_episode):
         # env.render(); Adding this line would show the attempts
         # of the agent in a pop up window.
-        frame_count += 1
+        game_count += 1
 
         # Use epsilon-greedy for exploration
-        if frame_count < epsilon_random_frames or epsilon > np.random.rand(1)[0]:
+        if game_count < epsilon_random_games or epsilon > np.random.rand(1)[0]:
             # Take random action
             action = np.random.choice(num_actions)
         else:
@@ -105,7 +108,7 @@ while True:  # Run until solved
             action = tf.argmax(action_probs[0]).numpy()
 
         # Decay probability of taking random action
-        epsilon -= epsilon_interval / epsilon_greedy_frames
+        epsilon -= epsilon_interval / epsilon_greedy_games
         epsilon = max(epsilon, epsilon_min)
 
         # Apply the sampled action in our environment
@@ -122,8 +125,8 @@ while True:  # Run until solved
         rewards_history.append(reward)
         state = state_next
 
-        # Update every fourth frame and once batch size is over 32
-        if frame_count % update_after_actions == 0 and len(done_history) > batch_size:
+        # Update every fourth game and once batch size is over 32
+        if game_count % update_after_actions == 0 and len(done_history) > batch_size:
 
             # Get indices of samples for replay buffers
             indices = np.random.choice(range(len(done_history)), size=batch_size)
@@ -147,7 +150,7 @@ while True:  # Run until solved
                 future_rewards, axis=1
             )
 
-            # If final frame set the last value to -1
+            # If final game set the last value to -1
             updated_q_values = updated_q_values * (1 - done_sample) - done_sample
 
             # Create a mask so we only calculate loss on the updated Q-values
@@ -166,12 +169,12 @@ while True:  # Run until solved
             grads = tape.gradient(loss, model.trainable_variables)
             optimizer.apply_gradients(zip(grads, model.trainable_variables))
 
-        if frame_count % update_target_network == 0:
+        if game_count % update_target_network == 0:
             # update the the target network with new weights
             model_target.set_weights(model.get_weights())
             # Log details
-            template = "running reward: {:.2f} at episode {}, frame count {}"
-            print(template.format(running_reward, episode_count, frame_count))
+            template = "running reward: {:.2f} at episode {}, game count {}"
+            print(template.format(running_reward, episode_count, game_count))
 
         # Limit the state and reward history
         if len(rewards_history) > max_memory_length:
