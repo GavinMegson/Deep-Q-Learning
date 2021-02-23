@@ -36,6 +36,13 @@ class Player():
                 if moves[i]['pp'] > 0 and not moves[i]['disabled']:
                     activeMoves.append(i)
             self.activeMoves = activeMoves
+            try:
+                self.trapped = updateDictionary['active'][0]['maybeTrapped']
+            except:
+                try:
+                    self.trapped = updateDictionary['active'][0]['trapped']
+                except:
+                    pass
         except KeyError:
             try:
                 self.forceSwitch = updateDictionary['forceSwitch'][0]
@@ -45,7 +52,7 @@ class Player():
                     self.trapped = updateDictionary['active'][0]['trapped']
                     self.activeMoves = [0]
                 except KeyError:
-                    pass
+                    self.activeMoves = [0]
 
         pokemonList = list()
         pokemonSummary = updateDictionary['side']['pokemon']
