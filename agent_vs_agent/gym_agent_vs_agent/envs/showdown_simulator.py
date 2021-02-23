@@ -68,9 +68,7 @@ class ShowdownSimulator():
         self.process.send(p2Action)
 
 
-        self.process.expect("sideupdate\r\np1\r\n(.+?}\r\n)\r\nsideupdate\r\np2\r\n(.+?}\r\n)|(end)")
-        #print("group 3 match: " + str(self.process.match.group(3)))
-        #print("after print")
+        self.process.expect("sideupdate\r\np1\r\n(.+?}\r\n)\r\nsideupdate\r\np2\r\n(.+?}\r\n)|(winner)")
         if self.process.match.group(3) is not None:
             self.matchOver = True
             return

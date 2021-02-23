@@ -10,7 +10,8 @@ class Player():
         self.forceSwitch = False
 
     def validMove(self, action):
-        if action < 5:
+        if action < 5 or self.trapped:
+            print("inside valid move" + str(self.activeMoves))
             if (action-1) in self.activeMoves:
                 return action
             else:
@@ -18,7 +19,6 @@ class Player():
         else:
             if self.team[action-4].hp == 0:
                 nextPokemon = self.nextActivePokemon()
-                print("inside valid move" + str(nextPokemon))
                 if nextPokemon == -1:
                     return (self.activeMoves[0]+1)
                 else:
@@ -27,6 +27,7 @@ class Player():
                 return action
 
     def update(self, updateMessage):
+        self.trapped = False
         updateDictionary = json.loads(updateMessage.split('|')[2])
         activeMoves = list()
         try:
@@ -40,6 +41,11 @@ class Player():
                 self.forceSwitch = updateDictionary['forceSwitch'][0]
             except KeyError:
                 self.forceSwitch = False
+                try:
+                    self.trapped = updateDictionary['active'][0]['trapped']
+                    self.activeMoves = [0]
+                except KeyError:
+                    pass
 
         pokemonList = list()
         pokemonSummary = updateDictionary['side']['pokemon']

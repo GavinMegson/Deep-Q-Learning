@@ -7,6 +7,13 @@ import tensorflow as tf
 
 env = gym.make('gym_agent_vs_agent:AgentVsAgent-v0', primaryAgent="test", opposingAgent="random")
 
+# Following code is adapted from Keras.io's example on applying DQN to playing
+# an Atari game. Notably, the shape that the neural network is expecting had
+# to be adapted which requires reshaping the output from the agent vs agent
+# gym
+######################
+# Begin adapted code #
+######################
 # Configuration paramaters for the whole setup
 seed = 42
 gamma = 0.99  # Discount factor for past rewards
@@ -19,17 +26,18 @@ epsilon_interval = (
 batch_size = 32  # Size of batch taken from replay buffer
 max_steps_per_episode = 10000
 
-num_actions = 4
+num_actions = 9
 
 
 def create_q_model():
     # Network defined by the Deepmind paper
-    inputs = layers.Input(shape=(84, 84, 4,))
+    #inputs = layers.Input(shape=(84, 84, 4,))
+    inputs = layers.Input(shape=(32, 54, 1,))
 
     # Convolutions on the frames on the screen
     layer1 = layers.Conv2D(32, 8, strides=4, activation="relu")(inputs)
     layer2 = layers.Conv2D(64, 4, strides=2, activation="relu")(layer1)
-    layer3 = layers.Conv2D(64, 3, strides=1, activation="relu")(layer2)
+    layer3 = layers.Conv2D(64, 1, strides=1, activation="relu")(layer2)
 
     layer4 = layers.Flatten()(layer3)
 
@@ -122,7 +130,9 @@ while True:  # Run until solved
 
             # Using list comprehension to sample from replay buffer
             state_sample = np.array([state_history[i] for i in indices])
+            state_sample = state_sample.reshape([1]+list(state_sample.shape)+[1])
             state_next_sample = np.array([state_next_history[i] for i in indices])
+            state_next_sample = state_next_sample.reshape([1]+list(state_next_sample.shape)+[1])
             rewards_sample = [rewards_history[i] for i in indices]
             action_sample = [action_history[i] for i in indices]
             done_sample = tf.convert_to_tensor(
@@ -185,4 +195,7 @@ while True:  # Run until solved
     if running_reward > 40:  # Condition to consider the task solved
         print("Solved at episode {}!".format(episode_count))
         break
+####################
+# end adapted code #
+####################
 
