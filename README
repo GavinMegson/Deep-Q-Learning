@@ -1,0 +1,2 @@
+Gym can be installed with 'pip install -e agent_vs_agent'
+Program can be run with 'python3 main.py'
