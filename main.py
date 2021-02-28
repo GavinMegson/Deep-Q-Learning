@@ -132,10 +132,19 @@ while True:  # Run until solved
             indices = np.random.choice(range(len(done_history)), size=batch_size)
 
             # Using list comprehension to sample from replay buffer
-            state_sample = np.array([state_history[i] for i in indices])
+            state_sample = np.array([state_history[i] for i in indices],dtype=object)
+            if state_sample.shape == (32,):
+                print("failure case")
+                state_sample = np.stack(state_sample)
+            state_sample = state_sample.astype('int32')
             state_sample = state_sample.reshape([1]+list(state_sample.shape)+[1])
-            state_next_sample = np.array([state_next_history[i] for i in indices])
-            state_next_sample = state_next_sample.reshape([1]+list(state_next_sample.shape)+[1])
+            state_next_sample = np.array([state_next_history[i] for i in indices],dtype=object)
+            if state_next_sample.shape == (32,):
+                print("failure case")
+                state_next_sample = np.stack(state_next_sample)
+            state_next_sample = state_next_sample.astype('int32')
+            #state_next_sample = state_next_sample.reshape([1]+list(state_next_sample.shape)+[1])
+            state_next_sample = state_next_sample.reshape([1, 32, 54, 1])
             rewards_sample = [rewards_history[i] for i in indices]
             action_sample = [action_history[i] for i in indices]
             done_sample = tf.convert_to_tensor(
@@ -178,6 +187,7 @@ while True:  # Run until solved
 
         # Limit the state and reward history
         if len(rewards_history) > max_memory_length:
+            print("**************************\nHERE\n**************************")
             del rewards_history[:1]
             del state_history[:1]
             del state_next_history[:1]

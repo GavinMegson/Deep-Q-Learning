@@ -4,6 +4,8 @@ class Pokemon():
         self.species = species
         self.hp = hp
         self.moves = moves
+        while not len(self.moves) == 4:
+            self.moves.append(-1)
         self.item = item
         self.ability = ability
 
@@ -13,7 +15,11 @@ class Pokemon():
     def summarize(self):
         summaryVector = np.array([self.species.value, self.hp])
         for move in self.moves:
-            summaryVector = np.concatenate([summaryVector, np.array([move.value])], axis=None)
+            if move == -1:
+                moveValue = -1
+            else:
+                moveValue = move.value
+            summaryVector = np.concatenate([summaryVector, np.array([moveValue])], axis=None)
         if self.item == -1:
             itemValue = -1
         else:

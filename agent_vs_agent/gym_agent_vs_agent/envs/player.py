@@ -11,7 +11,6 @@ class Player():
 
     def validMove(self, action):
         if action < 5 or self.trapped:
-            print("inside valid move" + str(self.activeMoves))
             if (action-1) in self.activeMoves:
                 return action
             else:
@@ -57,7 +56,7 @@ class Player():
         pokemonList = list()
         pokemonSummary = updateDictionary['side']['pokemon']
         for pokemon in pokemonSummary:
-            species = Species[pokemon['details'][:pokemon['details'].find(',')].replace('-','_').replace(' ','_').replace("’",'').replace('.','').replace('%','p')]
+            species = Species[pokemon['details'][:pokemon['details'].find(',')].replace('-','_').replace(' ','_').replace("’",'').replace(":",'').replace('.','').replace('%','p')]
             if pokemon['condition'] == '0 fnt':
                 hp = 0
             else:
@@ -85,6 +84,9 @@ class Player():
     def summarize(self):
         summaryVector = np.empty((1,1))
         for pokemon in self.team:
+            pokeVec = pokemon.summarize()
+            if not pokeVec.shape == (8,):
+                print(pokeVec)
             summaryVector = np.concatenate([summaryVector, pokemon.summarize()], axis=None)
         return summaryVector
 

@@ -7,8 +7,8 @@ import numpy as np
 class ShowdownSimulator():
     def __init__(self):
         self.process = pexpect.spawn('/home/wlayton/pokemon-showdown/pokemon-showdown simulate-battle', encoding='utf-8')
-        self.process.logfile_read = sys.stdout
-        #self.process.logfile = None
+        #self.process.logfile_read = sys.stdout
+        self.process.logfile = None
         self.matchOver = False
 
     def setup(self):
@@ -86,6 +86,9 @@ class ShowdownSimulator():
             self.process.expect("sideupdate\r\np1\r\n(.+?}\r\n)\r\nsideupdate\r\np2\r\n(.+?}\r\n)|(winner)")
             self.primaryAgent.forceSwitch = False
             self.opposingAgent.forceSwitch = False
+            if self.process.match.group(3) is not None:
+                self.matchOver = True
+                return
             self.primaryAgent.update(self.process.match.group(1))
             self.opposingAgent.update(self.process.match.group(2))
 
