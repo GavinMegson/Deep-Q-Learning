@@ -35,12 +35,12 @@ def create_q_model():
     # Network defined by the Deepmind paper
     # Old and new shapes
     #inputs = layers.Input(shape=(84, 84, 4,))
-    inputs = layers.Input(shape=(32, 54, 1,))
+    inputs = layers.Input(shape=(54, 1,))
 
     # Convolutions on the states of the Pokemon game
-    layer1 = layers.Conv2D(32, 8, strides=4, activation="relu")(inputs)
-    layer2 = layers.Conv2D(64, 4, strides=2, activation="relu")(layer1)
-    layer3 = layers.Conv2D(64, 1, strides=1, activation="relu")(layer2)
+    layer1 = layers.Conv1D(32, 8, strides=2, activation="relu")(inputs)
+    layer2 = layers.Conv1D(64, 4, strides=2, activation="relu")(layer1)
+    layer3 = layers.Conv1D(64, 1, strides=1, activation="relu")(layer2)
 
     layer4 = layers.Flatten()(layer3)
 
@@ -72,7 +72,7 @@ running_reward = 0
 episode_count = 0
 game_count = 0
 # Number of game states to take random action and observe output
-epsilon_random_games = 50000
+epsilon_random_games = 1000
 # Number of game states for exploration
 epsilon_greedy_games = 1000000.0
 # Maximum replay length
@@ -134,13 +134,11 @@ while True:  # Run until solved
             # Using list comprehension to sample from replay buffer
             state_sample = np.array([state_history[i] for i in indices],dtype=object)
             if state_sample.shape == (32,):
-                print("failure case")
                 state_sample = np.stack(state_sample)
             state_sample = state_sample.astype('int32')
-            state_sample = state_sample.reshape([1]+list(state_sample.shape)+[1])
+            state_sample = state_sample.reshape([1, 32, 54, 1])
             state_next_sample = np.array([state_next_history[i] for i in indices],dtype=object)
             if state_next_sample.shape == (32,):
-                print("failure case")
                 state_next_sample = np.stack(state_next_sample)
             state_next_sample = state_next_sample.astype('int32')
             #state_next_sample = state_next_sample.reshape([1]+list(state_next_sample.shape)+[1])
@@ -153,7 +151,7 @@ while True:  # Run until solved
 
             # Build the updated Q-values for the sampled future states
             # Use the target model for stability
-            future_rewards = model_target.predict(state_next_sample)
+            future_rewards = model_target.predict(state_next_sample[0])
             # Q value = reward + discount factor * expected future reward
             updated_q_values = rewards_sample + gamma * tf.reduce_max(
                 future_rewards, axis=1
@@ -167,7 +165,7 @@ while True:  # Run until solved
 
             with tf.GradientTape() as tape:
                 # Train the model on the states and updated Q-values
-                q_values = model(state_sample)
+                q_values = model(state_sample[0])
 
                 # Apply the masks to the Q-values to get the Q-value for action taken
                 q_action = tf.reduce_sum(tf.multiply(q_values, masks), axis=1)
