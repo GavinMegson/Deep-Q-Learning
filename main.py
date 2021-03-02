@@ -1,3 +1,4 @@
+import csv
 import gym
 import numpy as np
 from tensorflow import keras
@@ -5,7 +6,8 @@ from tensorflow.keras import layers
 import tensorflow as tf
 
 
-env = gym.make('gym_agent_vs_agent:AgentVsAgent-v0', primaryAgent="test", opposingAgent="random")
+env = gym.make('gym_agent_vs_agent:AgentVsAgent-v0',
+               primaryAgent="test", opposingAgent="random")
 
 # Following code is adapted from Keras.io's example on applying DQN to playing
 # an Atari game. Notably, the shape that the neural network is expecting had
@@ -50,13 +52,23 @@ def create_q_model():
     return keras.Model(inputs=inputs, outputs=action)
 
 
+def load_q_model(filename):
+    return keras.models.load_model(filename)
+
+
 # The first model makes the predictions for Q-values which are used to
 # make a action.
-model = create_q_model()
+
+#model = create_q_model()
+model = load_q_model('model')
+
 # Build a target model for the prediction of future rewards.
 # The weights of a target model get updated every 10000 steps thus when the
 # loss between the Q-values is calculated the target Q-value is stable.
-model_target = create_q_model()
+
+#model_target = create_q_model()
+model_target = load_q_model('model')
+
 # In the Deepmind paper they use RMSProp however then Adam optimizer
 # improves training time
 optimizer = keras.optimizers.Adam(learning_rate=0.00025, clipnorm=1.0)
@@ -72,16 +84,16 @@ running_reward = 0
 episode_count = 0
 game_count = 0
 # Number of game states to take random action and observe output
-epsilon_random_games = 1000
+epsilon_random_games = 0
 # Number of game states for exploration
 epsilon_greedy_games = 1000000.0
 # Maximum replay length
 # Note: The Deepmind paper suggests 1000000 however this causes memory issues
-max_memory_length = 100000
+max_memory_length = 1000000
 # Train the model after 4 actions
 update_after_actions = 4
 # How often to update the target network
-update_target_network = 10000
+update_target_network = 5000
 # Using huber loss for stability
 loss_function = keras.losses.Huber()
 
@@ -113,6 +125,7 @@ while True:  # Run until solved
 
         # Apply the sampled action in our environment
         state_next, reward, done, _ = env.step(action)
+        print(game_count, reward, running_reward)
         state_next = np.array(state_next)
 
         episode_reward += reward
@@ -129,15 +142,18 @@ while True:  # Run until solved
         if game_count % update_after_actions == 0 and len(done_history) > batch_size:
 
             # Get indices of samples for replay buffers
-            indices = np.random.choice(range(len(done_history)), size=batch_size)
+            indices = np.random.choice(
+                range(len(done_history)), size=batch_size)
 
             # Using list comprehension to sample from replay buffer
-            state_sample = np.array([state_history[i] for i in indices],dtype=object)
+            state_sample = np.array([state_history[i]
+                                     for i in indices], dtype=object)
             if state_sample.shape == (32,):
                 state_sample = np.stack(state_sample)
             state_sample = state_sample.astype('int32')
             state_sample = state_sample.reshape([1, 32, 54, 1])
-            state_next_sample = np.array([state_next_history[i] for i in indices],dtype=object)
+            state_next_sample = np.array(
+                [state_next_history[i] for i in indices], dtype=object)
             if state_next_sample.shape == (32,):
                 state_next_sample = np.stack(state_next_sample)
             state_next_sample = state_next_sample.astype('int32')
@@ -158,7 +174,8 @@ while True:  # Run until solved
             )
 
             # If final game set the last value to -1
-            updated_q_values = updated_q_values * (1 - done_sample) - done_sample
+            updated_q_values = updated_q_values * \
+                (1 - done_sample) - done_sample
 
             # Create a mask so we only calculate loss on the updated Q-values
             masks = tf.one_hot(action_sample, num_actions)
@@ -203,10 +220,11 @@ while True:  # Run until solved
 
     episode_count += 1
 
-    if running_reward > 40:  # Condition to consider the task solved
-        print("Solved at episode {}!".format(episode_count))
+    if running_reward > 10000:  # Condition to consider the task solved
+        print(f"Solved at episode {episode_count}!")
         break
 ####################
 # end adapted code #
 ####################
 
+# model.save('model75')
