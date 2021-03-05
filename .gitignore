@@ -1,3 +1,10 @@
 pokemondraftleague/
 pokemon-showdown/
-matches/
+matches*
+model*
+poke-backup*
+pokemondraftleague/
+pokemonshowdown/
+team-test.json
+test.html
+venv/

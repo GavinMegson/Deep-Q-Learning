@@ -4,11 +4,7 @@ import numpy as np
 from tensorflow import keras
 from tensorflow.keras import layers
 import tensorflow as tf
-from random import randint, uniform
 
-gpu_devices = tf.config.experimental.list_physical_devices('GPU')
-for device in gpu_devices:
-    tf.config.experimental.set_memory_growth(device, True)
 
 env = gym.make('gym_agent_vs_agent:AgentVsAgent-v0',
                primaryAgent="test", opposingAgent="random")
@@ -31,7 +27,7 @@ epsilon_interval = (
 )  # Rate at which to reduce chance of random action being taken
 batch_size = 32  # Size of batch taken from replay buffer
 max_steps_per_episode = 10000
-model_name = 'model-rnn-c-tox'
+model_name = 'model-tox-aggro-train
 
 # Number of actions needed to be adapted since the Showdown Simulator has more
 # moves than an Atari game
@@ -44,18 +40,15 @@ def create_q_model():
     #inputs = layers.Input(shape=(84, 84, 4,))
     inputs = layers.Input(shape=(54, 1,))
 
-    # layer1 = layers.Conv1D(32, 8, strides=2, activation="relu")(inputs)
-    # layer2 = layers.Conv1D(64, 4, strides=2, activation="relu")(layer1)
-
-    # layer4 = layers.Flatten()(layer2)
     # Convolutions on the states of the Pokemon game
-    layerA = layers.LSTM(1024, return_sequences=True)(inputs)
-    layerB = layers.Flatten()(layerA)
+    layer1 = layers.Conv1D(32, 8, strides=2, activation="relu")(inputs)
+    layer2 = layers.Conv1D(64, 4, strides=2, activation="relu")(layer1)
+    layer3 = layers.Conv1D(64, 1, strides=1, activation="relu")(layer2)
 
-    layer4 = layers.Dense(512, activation="relu")(layerB)
-    layer5 = layers.Dense(128, activation="relu")(layer4)
-    layer6 = layers.Dense(64, activation="relu")(layer5)
-    layer7 = layers.Dense(32, activation="relu")(layer6)
+    layer4 = layers.Flatten()(layer3)
+
+    layer5 = layers.Dense(512, activation="relu")(layer4)
+    layer7 = layers.Dense(64, activation="relu")(layer5)
     action = layers.Dense(num_actions, activation="linear")(layer7)
 
     return keras.Model(inputs=inputs, outputs=action)
@@ -69,14 +62,14 @@ def load_q_model(filename):
 # make a action.
 
 model = create_q_model()
-#model = load_q_model(model_name)
+#model = load_q_model('model-set-train')
 
 # Build a target model for the prediction of future rewards.
 # The weights of a target model get updated every 10000 steps thus when the
 # loss between the Q-values is calculated the target Q-value is stable.
 
 model_target = create_q_model()
-#model_target = load_q_model(model_name)
+#model_target = load_q_model('model-set-train')
 
 # In the Deepmind paper they use RMSProp however then Adam optimizer
 # improves training time
@@ -93,12 +86,12 @@ running_reward = 0
 episode_count = 0
 game_count = 0
 # Number of game states to take random action and observe output
-epsilon_random_games = 10000
+epsilon_random_games = 20000
 # Number of game states for exploration
 epsilon_greedy_games = 1000000.0
 # Maximum replay length
 # Note: The Deepmind paper suggests 1000000 however this causes memory issues
-max_memory_length = 100000
+max_memory_length = 1000000
 # Train the model after 4 actions
 update_after_actions = 4
 # How often to update the target network
@@ -117,13 +110,10 @@ while True:  # Run until solved
         # of the agent in a pop up window.
         game_count += 1
 
+        # Use epsilon-greedy for exploration
         if game_count < epsilon_random_games or epsilon > np.random.rand(1)[0]:
             # Take random action
             action = np.random.choice(num_actions)
-            if uniform(0, 1) < 0.9:
-                action = randint(0, 3)
-            else:
-                action = randint(4, 8)
         else:
             # Predict action Q-values
             # From environment state
