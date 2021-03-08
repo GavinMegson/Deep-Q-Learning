@@ -1,7 +1,8 @@
 pokemondraftleague/
 pokemon-showdown/
-matches*
-model*
+matches/
+models/
+eval/
 poke-backup*
 pokemondraftleague/
 pokemonshowdown/

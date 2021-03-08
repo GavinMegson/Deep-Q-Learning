@@ -31,7 +31,7 @@ epsilon_interval = (
 )  # Rate at which to reduce chance of random action being taken
 batch_size = 32  # Size of batch taken from replay buffer
 max_steps_per_episode = 10000
-model_name = 'models/model-rand-aggro-train'
+model_name = 'models/model-rnn-f-2'
 
 # Number of actions needed to be adapted since the Showdown Simulator has more
 # moves than an Atari game
@@ -96,7 +96,7 @@ epsilon_greedy_games = 1000000.0
 # Note: The Deepmind paper suggests 1000000 however this causes memory issues
 max_memory_length = 1000000
 # Train the model after 4 actions
-update_after_actions = 100000000000000000000000
+update_after_actions = 1
 # How often to update the target network
 update_target_network = 5000
 # Using huber loss for stability
@@ -108,29 +108,26 @@ while True:  # Run until solved
     state = np.array(env.reset())
     episode_reward = 0
 
-    if episode_count > 1000:
-        exit(0)
-
     for timestep in range(1, max_steps_per_episode):
         # env.render(); Adding this line would show the attempts
         # of the agent in a pop up window.
         game_count += 1
 
-        # if game_count < epsilon_random_games or epsilon > np.random.rand(1)[0]:
-        #     # Take random action
-        #     action = np.random.choice(num_actions)
-        #     if uniform(0, 1) < 0.9:
-        #         action = randint(0, 3)
-        #     else:
-        #         action = randint(4, 8)
-        # else:
-        # Predict action Q-values
-        # From environment state
-        state_tensor = tf.convert_to_tensor(state)
-        state_tensor = tf.expand_dims(state_tensor, 0)
-        action_probs = model(state_tensor, training=False)
-        # Take best action
-        action = tf.argmax(action_probs[0]).numpy()
+        if game_count < epsilon_random_games or epsilon > np.random.rand(1)[0]:
+            # Take random action
+            action = np.random.choice(num_actions)
+            if uniform(0, 1) < 0.9:
+                action = randint(0, 3)
+            else:
+                action = randint(4, 8)
+        else:
+            # Predict action Q-values
+            # From environment state
+            state_tensor = tf.convert_to_tensor(state)
+            state_tensor = tf.expand_dims(state_tensor, 0)
+            action_probs = model(state_tensor, training=False)
+            # Take best action
+            action = tf.argmax(action_probs[0]).numpy()
 
         # Decay probability of taking random action
         epsilon -= epsilon_interval / epsilon_greedy_games
@@ -214,8 +211,8 @@ while True:  # Run until solved
             template = "running reward: {:.2f} at episode {}, game count {}"
             print(template.format(running_reward, episode_count, game_count))
 
-        # if game_count % save_model_checkmark == 0:
-        #     model.save(model_name)
+        if game_count % save_model_checkmark == 0:
+            model.save(model_name)
 
         # Limit the state and reward history
         if len(rewards_history) > max_memory_length:
@@ -237,11 +234,11 @@ while True:  # Run until solved
 
     episode_count += 1
 
-    if running_reward > 1000000:  # Condition to consider the task solved
+    if running_reward > 1000:  # Condition to consider the task solved
         print(f"Solved at episode {episode_count}!")
         break
 ####################
 # end adapted code #
 ####################
 
-# model.save(model_name)
+model.save(model_name)
