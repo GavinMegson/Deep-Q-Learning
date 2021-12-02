@@ -1,15 +1,10 @@
 import csv
 import gym
-import os
 import numpy as np
 from tensorflow import keras
 from tensorflow.keras import layers
 import tensorflow as tf
-<<<<<<< HEAD
-import pickle
-=======
 from random import randint, uniform
->>>>>>> 423e281974b045e797a40194f1094a3521b440af
 
 gpu_devices = tf.config.experimental.list_physical_devices('GPU')
 for device in gpu_devices:
@@ -36,7 +31,7 @@ epsilon_interval = (
 )  # Rate at which to reduce chance of random action being taken
 batch_size = 32  # Size of batch taken from replay buffer
 max_steps_per_episode = 10000
-model_name = 'models/model-rand-aggro-train'
+model_name = 'model-rnn-c-tox'
 
 # Number of actions needed to be adapted since the Showdown Simulator has more
 # moves than an Atari game
@@ -49,15 +44,19 @@ def create_q_model():
     #inputs = layers.Input(shape=(84, 84, 4,))
     inputs = layers.Input(shape=(54, 1,))
 
-    layer1 = layers.Conv1D(32, 8, strides=2, activation="relu")(inputs)
-    layer2 = layers.Conv1D(64, 4, strides=2, activation="relu")(layer1)
+    # layer1 = layers.Conv1D(32, 8, strides=2, activation="relu")(inputs)
+    # layer2 = layers.Conv1D(64, 4, strides=2, activation="relu")(layer1)
 
-    #layer3 = layers.Flatten()(layer2)
+    # layer4 = layers.Flatten()(layer2)
     # Convolutions on the states of the Pokemon game
-    layer4 = layers.Dense(64, activation="relu")(layer2)
-    layerA = layers.LSTM(512, return_sequences=True)(layer4)
+    layerA = layers.LSTM(1024, return_sequences=True)(inputs)
     layerB = layers.Flatten()(layerA)
-    action = layers.Dense(num_actions, activation="linear")(layerB)
+
+    layer4 = layers.Dense(512, activation="relu")(layerB)
+    layer5 = layers.Dense(128, activation="relu")(layer4)
+    layer6 = layers.Dense(64, activation="relu")(layer5)
+    layer7 = layers.Dense(32, activation="relu")(layer6)
+    action = layers.Dense(num_actions, activation="linear")(layer7)
 
     return keras.Model(inputs=inputs, outputs=action)
 
@@ -69,24 +68,15 @@ def load_q_model(filename):
 # The first model makes the predictions for Q-values which are used to
 # make a action.
 
-#model = create_q_model()
-model = load_q_model(model_name)
+model = create_q_model()
+#model = load_q_model(model_name)
 
 # Build a target model for the prediction of future rewards.
 # The weights of a target model get updated every 10000 steps thus when the
 # loss between the Q-values is calculated the target Q-value is stable.
-<<<<<<< HEAD
-model_target = create_q_model()
-if os.path.exists('model.obj'):
-    with open('model.obj','rb') as f:
-        weights = pickle.load(f)
-        model.set_weights(weights)
-        model_target.set_weights(weights)
-=======
 
-#model_target = create_q_model()
-model_target = load_q_model(model_name)
->>>>>>> 423e281974b045e797a40194f1094a3521b440af
+model_target = create_q_model()
+#model_target = load_q_model(model_name)
 
 # In the Deepmind paper they use RMSProp however then Adam optimizer
 # improves training time
@@ -103,20 +93,16 @@ running_reward = 0
 episode_count = 0
 game_count = 0
 # Number of game states to take random action and observe output
-epsilon_random_games = 1
+epsilon_random_games = 10000
 # Number of game states for exploration
 epsilon_greedy_games = 1000000.0
 # Maximum replay length
 # Note: The Deepmind paper suggests 1000000 however this causes memory issues
-max_memory_length = 1000000
+max_memory_length = 100000
 # Train the model after 4 actions
-update_after_actions = 100000000000000000000000
+update_after_actions = 4
 # How often to update the target network
-<<<<<<< HEAD
-update_target_network = 1000
-=======
 update_target_network = 5000
->>>>>>> 423e281974b045e797a40194f1094a3521b440af
 # Using huber loss for stability
 loss_function = keras.losses.Huber()
 
@@ -126,29 +112,26 @@ while True:  # Run until solved
     state = np.array(env.reset())
     episode_reward = 0
 
-    if episode_count > 1000:
-        exit(0)
-
     for timestep in range(1, max_steps_per_episode):
         # env.render(); Adding this line would show the attempts
         # of the agent in a pop up window.
         game_count += 1
 
-        # if game_count < epsilon_random_games or epsilon > np.random.rand(1)[0]:
-        #     # Take random action
-        #     action = np.random.choice(num_actions)
-        #     if uniform(0, 1) < 0.9:
-        #         action = randint(0, 3)
-        #     else:
-        #         action = randint(4, 8)
-        # else:
-        # Predict action Q-values
-        # From environment state
-        state_tensor = tf.convert_to_tensor(state)
-        state_tensor = tf.expand_dims(state_tensor, 0)
-        action_probs = model(state_tensor, training=False)
-        # Take best action
-        action = tf.argmax(action_probs[0]).numpy()
+        if game_count < epsilon_random_games or epsilon > np.random.rand(1)[0]:
+            # Take random action
+            action = np.random.choice(num_actions)
+            if uniform(0, 1) < 0.9:
+                action = randint(0, 3)
+            else:
+                action = randint(4, 8)
+        else:
+            # Predict action Q-values
+            # From environment state
+            state_tensor = tf.convert_to_tensor(state)
+            state_tensor = tf.expand_dims(state_tensor, 0)
+            action_probs = model(state_tensor, training=False)
+            # Take best action
+            action = tf.argmax(action_probs[0]).numpy()
 
         # Decay probability of taking random action
         epsilon -= epsilon_interval / epsilon_greedy_games
@@ -183,19 +166,14 @@ while True:  # Run until solved
             if state_sample.shape == (32,):
                 state_sample = np.stack(state_sample)
             state_sample = state_sample.astype('int32')
-<<<<<<< HEAD
-            state_sample = state_sample.reshape([32, 54, 1])
-            state_next_sample = np.array([state_next_history[i] for i in indices],dtype=object)
-=======
             state_sample = state_sample.reshape([1, 32, 54, 1])
             state_next_sample = np.array(
                 [state_next_history[i] for i in indices], dtype=object)
->>>>>>> 423e281974b045e797a40194f1094a3521b440af
             if state_next_sample.shape == (32,):
                 state_next_sample = np.stack(state_next_sample)
             state_next_sample = state_next_sample.astype('int32')
             #state_next_sample = state_next_sample.reshape([1]+list(state_next_sample.shape)+[1])
-            state_next_sample = state_next_sample.reshape([32, 54, 1])
+            state_next_sample = state_next_sample.reshape([1, 32, 54, 1])
             rewards_sample = [rewards_history[i] for i in indices]
             action_sample = [action_history[i] for i in indices]
             done_sample = tf.convert_to_tensor(
@@ -204,7 +182,7 @@ while True:  # Run until solved
 
             # Build the updated Q-values for the sampled future states
             # Use the target model for stability
-            future_rewards = model_target.predict(state_next_sample, batch_size=batch_size)
+            future_rewards = model_target.predict(state_next_sample[0])
             # Q value = reward + discount factor * expected future reward
             updated_q_values = rewards_sample + gamma * tf.reduce_max(
                 future_rewards, axis=1
@@ -219,7 +197,7 @@ while True:  # Run until solved
 
             with tf.GradientTape() as tape:
                 # Train the model on the states and updated Q-values
-                q_values = model(state_sample)
+                q_values = model(state_sample[0])
 
                 # Apply the masks to the Q-values to get the Q-value for action taken
                 q_action = tf.reduce_sum(tf.multiply(q_values, masks), axis=1)
@@ -233,16 +211,16 @@ while True:  # Run until solved
         if game_count % update_target_network == 0:
             # update the the target network with new weights
             model_target.set_weights(model.get_weights())
-            pickle.dump(model_target.get_weights(),open('model.obj','wb'))
             # Log details
             template = "running reward: {:.2f} at episode {}, game count {}"
             print(template.format(running_reward, episode_count, game_count))
 
-        # if game_count % save_model_checkmark == 0:
-        #     model.save(model_name)
+        if game_count % save_model_checkmark == 0:
+            model.save(model_name)
 
         # Limit the state and reward history
         if len(rewards_history) > max_memory_length:
+            print("**************************\nHERE\n**************************")
             del rewards_history[:1]
             del state_history[:1]
             del state_next_history[:1]
@@ -260,11 +238,11 @@ while True:  # Run until solved
 
     episode_count += 1
 
-    if running_reward > 1000000:  # Condition to consider the task solved
+    if running_reward > 1000:  # Condition to consider the task solved
         print(f"Solved at episode {episode_count}!")
         break
 ####################
 # end adapted code #
 ####################
 
-# model.save(model_name)
+model.save(model_name)

@@ -1,15 +1,10 @@
 import csv
 import gym
-import os
 import numpy as np
 from tensorflow import keras
 from tensorflow.keras import layers
 import tensorflow as tf
-<<<<<<< HEAD
-import pickle
-=======
 from random import randint, uniform
->>>>>>> 423e281974b045e797a40194f1094a3521b440af
 
 gpu_devices = tf.config.experimental.list_physical_devices('GPU')
 for device in gpu_devices:
@@ -75,18 +70,9 @@ model = load_q_model(model_name)
 # Build a target model for the prediction of future rewards.
 # The weights of a target model get updated every 10000 steps thus when the
 # loss between the Q-values is calculated the target Q-value is stable.
-<<<<<<< HEAD
-model_target = create_q_model()
-if os.path.exists('model.obj'):
-    with open('model.obj','rb') as f:
-        weights = pickle.load(f)
-        model.set_weights(weights)
-        model_target.set_weights(weights)
-=======
 
 #model_target = create_q_model()
 model_target = load_q_model(model_name)
->>>>>>> 423e281974b045e797a40194f1094a3521b440af
 
 # In the Deepmind paper they use RMSProp however then Adam optimizer
 # improves training time
@@ -112,11 +98,7 @@ max_memory_length = 1000000
 # Train the model after 4 actions
 update_after_actions = 100000000000000000000000
 # How often to update the target network
-<<<<<<< HEAD
-update_target_network = 1000
-=======
 update_target_network = 5000
->>>>>>> 423e281974b045e797a40194f1094a3521b440af
 # Using huber loss for stability
 loss_function = keras.losses.Huber()
 
@@ -183,19 +165,14 @@ while True:  # Run until solved
             if state_sample.shape == (32,):
                 state_sample = np.stack(state_sample)
             state_sample = state_sample.astype('int32')
-<<<<<<< HEAD
-            state_sample = state_sample.reshape([32, 54, 1])
-            state_next_sample = np.array([state_next_history[i] for i in indices],dtype=object)
-=======
             state_sample = state_sample.reshape([1, 32, 54, 1])
             state_next_sample = np.array(
                 [state_next_history[i] for i in indices], dtype=object)
->>>>>>> 423e281974b045e797a40194f1094a3521b440af
             if state_next_sample.shape == (32,):
                 state_next_sample = np.stack(state_next_sample)
             state_next_sample = state_next_sample.astype('int32')
             #state_next_sample = state_next_sample.reshape([1]+list(state_next_sample.shape)+[1])
-            state_next_sample = state_next_sample.reshape([32, 54, 1])
+            state_next_sample = state_next_sample.reshape([1, 32, 54, 1])
             rewards_sample = [rewards_history[i] for i in indices]
             action_sample = [action_history[i] for i in indices]
             done_sample = tf.convert_to_tensor(
@@ -204,7 +181,7 @@ while True:  # Run until solved
 
             # Build the updated Q-values for the sampled future states
             # Use the target model for stability
-            future_rewards = model_target.predict(state_next_sample, batch_size=batch_size)
+            future_rewards = model_target.predict(state_next_sample[0])
             # Q value = reward + discount factor * expected future reward
             updated_q_values = rewards_sample + gamma * tf.reduce_max(
                 future_rewards, axis=1
@@ -219,7 +196,7 @@ while True:  # Run until solved
 
             with tf.GradientTape() as tape:
                 # Train the model on the states and updated Q-values
-                q_values = model(state_sample)
+                q_values = model(state_sample[0])
 
                 # Apply the masks to the Q-values to get the Q-value for action taken
                 q_action = tf.reduce_sum(tf.multiply(q_values, masks), axis=1)
@@ -233,7 +210,6 @@ while True:  # Run until solved
         if game_count % update_target_network == 0:
             # update the the target network with new weights
             model_target.set_weights(model.get_weights())
-            pickle.dump(model_target.get_weights(),open('model.obj','wb'))
             # Log details
             template = "running reward: {:.2f} at episode {}, game count {}"
             print(template.format(running_reward, episode_count, game_count))
@@ -243,6 +219,7 @@ while True:  # Run until solved
 
         # Limit the state and reward history
         if len(rewards_history) > max_memory_length:
+            print("**************************\nHERE\n**************************")
             del rewards_history[:1]
             del state_history[:1]
             del state_next_history[:1]

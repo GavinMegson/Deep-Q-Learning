@@ -1,0 +1,11 @@
+pokemondraftleague/
+pokemon-showdown/
+matches/
+models/
+eval/
+poke-backup*
+pokemondraftleague/
+pokemonshowdown/
+team-test.json
+test.html
+venv/
